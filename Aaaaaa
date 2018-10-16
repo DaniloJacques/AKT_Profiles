@@ -140,6 +140,9 @@ echo Disabling TouchBoost
     if [ -e "/sys/module/msm_performance/parameters/touchboost" ]; then
     chmod 644 /sys/module/msm_performance/parameters/touchboost
     echo 0 > /sys/module/msm_performance/parameters/touchboost
+else
+    echo "*Not supported for your current Kernel*"
+fi
 
 echo Tweaking other various Settings
 echo ·I/O Values
@@ -173,3 +176,4 @@ if [ -e "/sys/block/dm-0/bdi/read_ahead_kb" ]; then
 fi
 if [ -e "/sys/block/sda/bdi/read_ahead_kb" ]; then
 	echo 512 > /sys/block/sda/bdi/read_ahead_kb
+fi
