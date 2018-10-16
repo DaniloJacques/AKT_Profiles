@@ -107,7 +107,7 @@ fi
 if [ -e "/proc/sys/kernel/sched_enable_power_aware" ]; then
     echo 1 > /proc/sys/kernel/sched_enable_power_aware
 fi
-echo 7 > /proc/sys/kernel/sched_upmigrate_min_nice
+#echo 7 > /proc/sys/kernel/sched_upmigrate_min_nice
 echo 4 > /proc/sys/kernel/sched_ravg_hist_size
 if [ -e "/proc/sys/kernel/sched_small_wakee_task_load" ]; then
 	echo 15 > /proc/sys/kernel/sched_small_wakee_task_load
@@ -135,6 +135,11 @@ fi
 if [ -e "/proc/sys/kernel/sched_boost" ]; then
 	echo 0 > /proc/sys/kernel/sched_boost
 fi
+#Disable TouchBoost
+echo Disabling TouchBoost
+    if [ -e "/sys/module/msm_performance/parameters/touchboost" ]; then
+    chmod 644 /sys/module/msm_performance/parameters/touchboost
+    echo 0 > /sys/module/msm_performance/parameters/touchboost
 
 echo Tweaking other various Settings
 echo ·I/O Values
@@ -146,26 +151,7 @@ if [ -e /sys/block/dm-0/queue/scheduler ]; then
     DM_PATH=/sys/block/dm-0/queue
 fi
 string=/sys/devices/virtual/block/dm-0/queue/scheduler;
-Zen_Available=false;
-if  $BB grep 'zen' $string; then
-     Zen_Available=true;
-fi
-if [ "$Zen_Available" == "true" ]; then
-    if [ -e $DM_PATH/scheduler_hard ]; then
-        echo zen > $DM_PATH/scheduler_hard
-    fi
-    echo zen > $DM_PATH/scheduler
-    sleep 2
-    echo 300 > $DM_PATH/iosched/sync_expire
-    echo 2800 > $DM_PATH/iosched/async_expire
-    echo 14 > $DM_PATH/iosched/fifo_batch
-    chmod 644 $DM_PATH/iosched/sync_expire
-    echo 300 > $DM_PATH/iosched/sync_expire
-fi
-if [ "$Zen_Available" = "false" ]; then
-    if grep -q 'ro.build.flavor=lineage_oneplus3-userdebug' /system/build.prop; then
-        echo ZEN not avalible, setting 'Noop' instead...	
-        if [ -e $DM_PATH/scheduler_hard ]; then
+      if [ -e $DM_PATH/scheduler_hard ]; then
            echo noop > $DM_PATH/scheduler_hard
         fi
     echo noop > $DM_PATH/scheduler
@@ -175,37 +161,8 @@ if [ "$Zen_Available" = "false" ]; then
            echo cfq > $DM_PATH/scheduler_hard
         fi
         echo cfq > $DM_PATH/scheduler
-    fi
-fi
-fi
-for i in /sys/block/../devices/soc/624000.ufshc/host0/target0:0:0/0:0:0:[0-4]/block/*/queue; do
-  string4=$($BB readlink -f $i/scheduler | cut -d 'q' -f1 | cut -d 'k' -f2 | cut -d '/' -f2 | tr a-z A-Z)
-  string5=$($BB cat $i/scheduler | cut -d ']' -f1 | cut -d '[' -f2 | $BB tr a-z A-Z)
-  if [ "$string5" == "NOOP" ]; then
-      echo "Leaving $string4 block at default $string5"
-      echo ""
-      sleep 0.1
-  fi
-  if [ "$string5" != "NOOP" ]; then
-      echo "Changing $string4 block I/O scheduler"
-      if [ -e $i/scheduler_hard ]; then
-          echo zen > $i/scheduler_hard
-      fi
-      echo zen > $i/scheduler
-      echo ""
-      sleep 2
-      # Initialize string 6 to avoid reference conflicts
-      string6=$($BB cat $i/scheduler | cut -d ']' -f1 | cut -d '[' -f2)
-      if [ "$string6" == "zen" ]; then
-         echo 300 > $i/iosched/sync_expire
-         echo 2800 > $i/iosched/async_expire
-         echo 14 > $i/iosched/fifo_batch
-        chmod 644 $i/iosched/sync_expire
-        echo 300 > $i/iosched/sync_expire
-    fi
-  fi
-done
-if [ -e "$DM_PATH/iostats" ]; then
+    fi    
+    if [ -e "$DM_PATH/iostats" ]; then
 	echo 0 > $DM_PATH/iostats
 fi
 if [ -e "$DM_PATH/rq_affinity" ]; then
@@ -216,4 +173,3 @@ if [ -e "/sys/block/dm-0/bdi/read_ahead_kb" ]; then
 fi
 if [ -e "/sys/block/sda/bdi/read_ahead_kb" ]; then
 	echo 512 > /sys/block/sda/bdi/read_ahead_kb
-fi
