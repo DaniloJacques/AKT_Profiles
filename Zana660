@@ -79,9 +79,15 @@ sleep 0.2
 
 echo Enabling Input Boost at 633 MHz for the LITTLE cluster and at 1113 MHz for the BIG Cluster
 chmod 644 /sys/module/cpu_boost/parameters/input_boost_freq
-echo 0:633600  1:0 2:1113600 3:0 > /sys/module/cpu_boost/parameters/input_boost_freq
+echo 0:633600 1:633600 2:0 3:0 4:1113600 5:1113600 6:0 7:0 > /sys/module/cpu_boost/parameters/input_boost_freq
 chmod 644 /sys/module/cpu_boost/parameters/input_boost_ms
 echo 66 > /sys/module/cpu_boost/parameters/input_boost_ms
+
+#Disable BCL
+echo Disabling BCL and Removing Perfd
+if [ -e "/sys/devices/soc/soc:qcom,bcl/mode" ]; then
+echo -n disable > /sys/devices/soc/soc:qcom,bcl/mode
+fi
 
 #Enable Core Control and Disable MSM Thermal Throttling allowing for longer sustained performance
 echo Disabling Aggressive CPU Thermal Throttling
